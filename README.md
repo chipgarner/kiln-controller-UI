@@ -1,6 +1,10 @@
-# Getting Started with Create React App
+# UI for kiln-contoller
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is an alternative UI for kiln-controller. It can run along side or instead of the UI that comes with kiln-controller.
+
+A React project using Them-UI and Recharts.
+
+
 
 ## Available Scripts
 
