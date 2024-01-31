@@ -7,7 +7,6 @@ import {CartesianGrid,
     YAxis} from "recharts";
 import moment from "moment/moment";
 import { Box  } from 'theme-ui'
-import React from "react";
 
 
 export type timeTempProps = {
@@ -33,9 +32,10 @@ export function MainChart(tempData: timeTempProps,
                     <CartesianGrid strokeDasharray="4" fill={grid_fill_color}/>
                     <XAxis dataKey="time"
                            label={{ value: 'Time', position: 'bottom'}}
-                           domain={["auto", "auto"]}
+                           domain={[0, 36000000]}
                            // allowDataOverflow={false}
-                           tickFormatter = {(unixTime) => moment(unixTime).format('HH.mm')}
+                           tickFormatter = {(tick) => moment(tick).format('HH.mm')}
+                           // ticks = {[0, 1800000, 3600000, 7200000, 10800000, 14400000, 18000000, 21600000, 25200000]}
                            type="number"
                            includeHidden={true}/>
                     <YAxis yAxisId="left-axis"
