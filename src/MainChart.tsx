@@ -7,10 +7,10 @@ import {CartesianGrid,
     YAxis} from "recharts";
 import moment from "moment/moment";
 import { Box  } from 'theme-ui'
-import {timeTempProps} from "./Props";
+import {timeTempProps, usingProfileProps} from "./Props";
 
 export function MainChart(tempData: timeTempProps,
-                          profileData: timeTempProps,
+                          usingProfile: usingProfileProps,
                           grid_fill_color: string) {
     return (
         <Box color="text" bg="background"
@@ -40,7 +40,7 @@ export function MainChart(tempData: timeTempProps,
                            }}/>
                     <Line yAxisId="left-axis"
                           type="linear"
-                          data={profileData}
+                          data={usingProfile.data}
                           isAnimationActive={false}
                           strokeWidth={3}
                           dataKey="temperature"

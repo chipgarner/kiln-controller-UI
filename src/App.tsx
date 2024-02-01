@@ -4,7 +4,7 @@ import useWebSocket, {ReadyState} from 'react-use-websocket';
 import {ThemeUIProvider, Grid, useColorMode} from 'theme-ui'
 import {MainChart} from "./MainChart";
 import {initStatusProps, Controls} from "./Controls"
-import {statusProps, profileNamesProps, profilesProps, timeTempProps} from './Props'
+import {statusProps, usingProfileProps, profileNamesProps, profilesProps, timeTempProps} from './Props'
 import {theme} from "./TheTheme"
 
 // Example:  const WS_URL = 'ws://127.0.0.1:8081/status';
@@ -53,6 +53,9 @@ function App() {
     const [profileNames, setProfileNames] = useState<profileNamesProps>([]);
     const [profiles, setProfiles] = useState<profilesProps>([]);
 
+    let initProfile: usingProfileProps = {name: 'None', data: []}
+    const [usingProfile, setUsingProfile] = useState<usingProfileProps>(initProfile);
+
     const processMessages = (event: { data: string; }) => {
         try {
             const response = JSON.parse(event.data);
@@ -79,6 +82,7 @@ function App() {
                     }
                     console.debug(theProfiles)
                     setProfiles(profiles => theProfiles)
+                    setUsingProfile(usingProfile => theProfiles[0])
                     console.debug(profiles)
                     setSocketUrl(WS_URL + '/status')
                 }
@@ -134,7 +138,7 @@ function App() {
         <ThemeUIProvider theme={theme}>
             {Controls(timesTemps, status, profileNames, profiles)}
             <Grid gap={1} columns={[1, 1, 2]} margin={1}>
-                {MainChart(timesTemps, profileData, "black")}
+                {MainChart(timesTemps, usingProfile, "black")}
             </Grid>
             <ColorModeButton/>
         </ThemeUIProvider>

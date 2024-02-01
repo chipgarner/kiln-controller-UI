@@ -20,3 +20,9 @@ export type profilesProps = {
     name: string;
     data: timeTempProps;
 }[];
+
+
+export type usingProfileProps = {
+    name: string;
+    data: timeTempProps;
+};
