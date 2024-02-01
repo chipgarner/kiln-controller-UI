@@ -7,12 +7,7 @@ import {CartesianGrid,
     YAxis} from "recharts";
 import moment from "moment/moment";
 import { Box  } from 'theme-ui'
-
-
-export type timeTempProps = {
-    time: number;
-    temperature: number;
-}[];
+import {timeTempProps} from "./Props";
 
 export function MainChart(tempData: timeTempProps,
                           profileData: timeTempProps,

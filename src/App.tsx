@@ -2,8 +2,9 @@
 import React, {useEffect, useState} from 'react';
 import useWebSocket, {ReadyState} from 'react-use-websocket';
 import {ThemeUIProvider, Grid, useColorMode} from 'theme-ui'
-import {MainChart, timeTempProps} from "./MainChart";
-import {statusProps, initStatusProps, profileNamesProps, Controls} from "./Controls"
+import {MainChart} from "./MainChart";
+import {initStatusProps, Controls} from "./Controls"
+import {statusProps, profileNamesProps, profilesProps, timeTempProps} from './Props'
 import {theme} from "./TheTheme"
 
 // Example:  const WS_URL = 'ws://127.0.0.1:8081/status';
@@ -50,6 +51,7 @@ function App() {
     const [profileData, setProfile] = useState<timeTempProps>([]);
     const [status, setStatus] = useState<statusProps>(initStatusProps)
     const [profileNames, setProfileNames] = useState<profileNamesProps>([]);
+    const [profiles, setProfiles] = useState<profilesProps>([]);
 
     const processMessages = (event: { data: string; }) => {
         try {
@@ -60,9 +62,18 @@ function App() {
                 setSocketUrl(WS_URL + '/storage')
                 if (response[0].name) {
                     for (let i = 0; i < response.length; i++) {
-                        setProfileNames(profileNames => [...profileNames, response[i].name])
+                        setProfileNames(profileNames => [...profileNames, response[i]])
+                        let profileName: string = response[i].name
+                        response[i].data.forEach((segment: number[]) => {
+                            let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
+                            setProfile(profileData => [...profileData, thisSegment])
+                            console.debug(thisSegment)
+                        })
+                        // let thisProfile = {"name": profileName, "data": profileData}
+                        // console.debug(thisProfile)
+                        // setProfiles(profiles => [...profiles, thisProfile)
                     }
-                    console.debug(profileNames)
+                    console.debug(profiles)
                     setSocketUrl(WS_URL + '/status')
                 }
             }
@@ -72,10 +83,10 @@ function App() {
                 let newtemp: number = response.temperature
                 let tt = {"time": newtime, "temperature": newtemp}
                 setTimesTemps(timesTemps => [...timesTemps, tt])
-            } else if (response.profile) {
+            } else if (response.profile) { // This is from the Backlog message.
                 response.profile.data.forEach((segment: number[]) => {
                     let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
-                    setProfile(profileData => [...profileData, thisSegment])
+                    // setProfile(profileData => [...profileData, thisSegment])
                 })
                 console.debug(profileData)
             }
