@@ -18,5 +18,5 @@ export type timeTempProps = {
 
 export type profilesProps = {
     name: string;
-    data: timeTempProps[];
+    data: timeTempProps;
 }[];

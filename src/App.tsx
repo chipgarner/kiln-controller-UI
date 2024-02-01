@@ -61,18 +61,24 @@ function App() {
             if (profileNames.length < 1) { // No list of profile names, switch websockets to get them.
                 setSocketUrl(WS_URL + '/storage')
                 if (response[0].name) {
+                    let theProfiles: profilesProps = []
                     for (let i = 0; i < response.length; i++) {
                         setProfileNames(profileNames => [...profileNames, response[i]])
                         let profileName: string = response[i].name
+                        let segments: timeTempProps = []
                         response[i].data.forEach((segment: number[]) => {
                             let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
                             setProfile(profileData => [...profileData, thisSegment])
+                            segments.push(thisSegment)
                             console.debug(thisSegment)
                         })
-                        // let thisProfile = {"name": profileName, "data": profileData}
-                        // console.debug(thisProfile)
-                        // setProfiles(profiles => [...profiles, thisProfile)
+                        let thisProfile = {"name": profileName, "data": segments}
+                        console.debug(thisProfile)
+                        theProfiles.push(thisProfile)
+                        // setProfiles(profiles => [profiles, ...thisProfile)
                     }
+                    console.debug(theProfiles)
+                    setProfiles(profiles => theProfiles)
                     console.debug(profiles)
                     setSocketUrl(WS_URL + '/status')
                 }
@@ -86,7 +92,7 @@ function App() {
             } else if (response.profile) { // This is from the Backlog message.
                 response.profile.data.forEach((segment: number[]) => {
                     let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
-                    // setProfile(profileData => [...profileData, thisSegment])
+                    setProfile(profileData => [...profileData, thisSegment])
                 })
                 console.debug(profileData)
             }
@@ -126,7 +132,7 @@ function App() {
 
     return (
         <ThemeUIProvider theme={theme}>
-            {Controls(timesTemps, status, profileNames, profileData)}
+            {Controls(timesTemps, status, profileNames, profiles)}
             <Grid gap={1} columns={[1, 1, 2]} margin={1}>
                 {MainChart(timesTemps, profileData, "black")}
             </Grid>

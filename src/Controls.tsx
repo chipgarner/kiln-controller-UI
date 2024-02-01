@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import {Button} from "theme-ui"
-import {timeTempProps} from "./Props";
+import {profilesProps, timeTempProps} from "./Props";
 import {Select} from "theme-ui";
 import {statusProps, profileNamesProps} from "./Props";
 
@@ -43,7 +43,7 @@ export function initStatusProps() {
 export function Controls(timesTemps: timeTempProps,
                          kilnStatus: statusProps,
                          profileNames: profileNamesProps,
-                         profileData: timeTempProps) {
+                         profiles: profilesProps) {
 
     return (
         <div
@@ -81,7 +81,7 @@ export function Controls(timesTemps: timeTempProps,
                         }
                     }}>
                 {/*<option value="value" selected>Select Profile</option>*/}
-                {profileNames.slice(0).map((category) => (
+                {profiles.slice(0).map((category) => (
                     <option>
                         {category.name}
                     </option>
