@@ -4,7 +4,7 @@ import useWebSocket, {ReadyState} from 'react-use-websocket';
 import {ThemeUIProvider, Grid, useColorMode} from 'theme-ui'
 import {MainChart} from "./MainChart";
 import {initStatusProps, Controls} from "./Controls"
-import {statusProps, usingProfileProps, profileNamesProps, profilesProps, timeTempProps} from './Props'
+import {statusProps, usingProfileProps, profilesProps, timeTempProps} from './Props'
 import {theme} from "./TheTheme"
 
 // Example:  const WS_URL = 'ws://127.0.0.1:8081/status';
@@ -18,8 +18,10 @@ console.log(WS_URL)
 
 function App() {
     const [socketUrl, setSocketUrl] = useState(WS_URL + '/status');
-    const {sendMessage,
-        sendJsonMessage, readyState} = useWebSocket(socketUrl, {
+    const {
+        sendMessage,
+        sendJsonMessage, readyState
+    } = useWebSocket(socketUrl, {
         onOpen: () => {
             console.log('WebSocket connection established.');
             if (socketUrl.indexOf('storage') > -1) {
@@ -50,7 +52,7 @@ function App() {
     const [timesTemps, setTimesTemps] = useState<timeTempProps>([]);
     const [profileData, setProfile] = useState<timeTempProps>([]);
     const [status, setStatus] = useState<statusProps>(initStatusProps)
-    const [profileNames, setProfileNames] = useState<profileNamesProps>([]);
+    // const [profileNames, setProfileNames] = useState<profileNamesProps>([]);
     const [profiles, setProfiles] = useState<profilesProps>([]);
 
     let initProfile: usingProfileProps = {name: 'None', data: []}
@@ -61,29 +63,25 @@ function App() {
             const response = JSON.parse(event.data);
             console.debug(response)
 
-            if (profileNames.length < 1) { // No list of profile names, switch websockets to get them.
+            if (profiles.length < 1) { // No list of profile names, switch websockets to get them.
                 setSocketUrl(WS_URL + '/storage')
                 if (response[0].name) {
                     let theProfiles: profilesProps = []
                     for (let i = 0; i < response.length; i++) {
-                        setProfileNames(profileNames => [...profileNames, response[i]])
+                        // setProfileNames(profileNames => [...profileNames, response[i]])
                         let profileName: string = response[i].name
                         let segments: timeTempProps = []
                         response[i].data.forEach((segment: number[]) => {
                             let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
                             setProfile(profileData => [...profileData, thisSegment])
                             segments.push(thisSegment)
-                            console.debug(thisSegment)
                         })
                         let thisProfile = {"name": profileName, "data": segments}
-                        console.debug(thisProfile)
                         theProfiles.push(thisProfile)
-                        // setProfiles(profiles => [profiles, ...thisProfile)
                     }
-                    console.debug(theProfiles)
                     setProfiles(profiles => theProfiles)
                     setUsingProfile(usingProfile => theProfiles[0])
-                    console.debug(profiles)
+                    console.debug(theProfiles)
                     setSocketUrl(WS_URL + '/status')
                 }
             }
@@ -93,12 +91,28 @@ function App() {
                 let newtemp: number = response.temperature
                 let tt = {"time": newtime, "temperature": newtemp}
                 setTimesTemps(timesTemps => [...timesTemps, tt])
-            } else if (response.profile) { // This is from the Backlog message.
+
+            } else if (response.log) {
+                console.debug("Processing backlog")
+                
+                for (let i = 0; i < response.log.length; i++) {
+                    let newtime: number = response.log[i].runtime * 1000 //moment needs milliseconds, show actual times in the charts
+                    let newtemp: number = response.log[i].temperature
+                    let newtt = {"time": newtime, "temperature": newtemp}
+                    setTimesTemps(timesTemps => [...timesTemps, newtt])
+                    console.debug(newtt)
+                }
+
+                let profileName: string = response.profile.name
+                let segments: timeTempProps = []
                 response.profile.data.forEach((segment: number[]) => {
                     let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
                     setProfile(profileData => [...profileData, thisSegment])
+                    segments.push(thisSegment)
                 })
-                console.debug(profileData)
+                let thisProfile = {"name": profileName, "data": segments}
+                setUsingProfile(usingProfile => thisProfile)
+                console.debug(usingProfile)
             }
 
         } catch (e) {
@@ -136,7 +150,7 @@ function App() {
 
     return (
         <ThemeUIProvider theme={theme}>
-            {Controls(timesTemps, status, profileNames, profiles)}
+            {Controls(timesTemps, status, usingProfile, profiles)}
             <Grid gap={1} columns={[1, 1, 2]} margin={1}>
                 {MainChart(timesTemps, usingProfile, "black")}
             </Grid>

@@ -1,8 +1,10 @@
 /** @jsxImportSource theme-ui */
-import {Button} from "theme-ui"
-import {profilesProps, timeTempProps} from "./Props";
+import {Button, Grid} from "theme-ui"
+import {profilesProps, usingProfileProps, timeTempProps} from "./Props";
 import {Select} from "theme-ui";
-import {statusProps, profileNamesProps} from "./Props";
+import {statusProps} from "./Props";
+import {ProfileTable} from "./ProfileTable"
+import {ProfileChart} from "./ProfileChart"
 
 let server: string = window.location.href
 server = server.split(":")[1]
@@ -42,7 +44,7 @@ export function initStatusProps() {
 
 export function Controls(timesTemps: timeTempProps,
                          kilnStatus: statusProps,
-                         profileNames: profileNamesProps,
+                         usingProfile: usingProfileProps,
                          profiles: profilesProps) {
 
     return (
@@ -50,6 +52,7 @@ export function Controls(timesTemps: timeTempProps,
             sx={{
                 display: 'flex',
             }}>
+            {usingProfile.name}
             <Button disabled={kilnStatus.StartStopDisabled} onClick={handleClickStartStop}
                     sx={{width: '150px'}}>{kilnStatus.StartStop}</Button>
 
@@ -89,6 +92,10 @@ export function Controls(timesTemps: timeTempProps,
                 }
             </Select>
 
+            <Grid gap={1} columns={[1, 1, 2]} margin={1}>
+                {ProfileChart(usingProfile.data, "whatever")}
+                {ProfileTable(usingProfile.data)}
+            </Grid>
 
 
 
