@@ -1,104 +1,79 @@
 /** @jsxImportSource theme-ui */
-import {Button, Grid} from "theme-ui"
-import {profilesProps, usingProfileProps, timeTempProps} from "./Props";
-import {Select} from "theme-ui";
-import {statusProps} from "./Props";
-import {ProfileTable} from "./ProfileTable"
-import {ProfileChart} from "./ProfileChart"
+import {Button} from "theme-ui";
+import React, {useEffect, useState} from "react";
+import useWebSocket, {ReadyState} from "react-use-websocket";
+import {usingProfileProps} from "./Props";
 
 let server: string = window.location.href
 server = server.split(":")[1]
 server = server.split(":")[0]
-const SERVER = 'http:' + server + ':8081/'
+const WS_URL = 'ws:' + server + ':8081';
 
-export function handleClickStartStop() {
-    // Send data to the backend via POST
-    console.debug(SERVER)
-    fetch( SERVER + 'start_stop', {
-        mode: 'no-cors',
-        method: 'POST',
-    })
-}
+export function Controls( state: string, usingProfile: usingProfileProps):React.JSX.Element{
+    const [socketUrl,] = useState(WS_URL + '/control');
+    const {
+        sendMessage,
+        sendJsonMessage, readyState
+    } = useWebSocket(socketUrl, {
+        onOpen: () => {console.log('WebSocket connection established: ' + socketUrl);},
+        share: true,
+        filter: () => false,
+        retryOnError: false,
+        shouldReconnect: () => true,
+        onMessage: (event: WebSocketEventMap['message']) => processMessages(event),
+        onClose: (): void => {console.debug('Socket closed: ' + socketUrl)}
+    });
 
-function handleProfileSelected(event: React.ChangeEvent<HTMLSelectElement>) {
-    let message = {'profile_name': event.target.value}
-    console.debug(message)
-    fetch(SERVER + 'api', {
-        mode: 'no-cors',
-        method: 'POST',
-        body: JSON.stringify(message)
-    })
-}
+    useEffect(() => {
+        if (readyState === ReadyState.OPEN) {
+            sendMessage('');
+            console.debug('sendMessage')
+        }
+    }, [sendMessage, readyState]);
 
-export function initStatusProps() {
-    let sprops: statusProps
-    sprops = {
-        'label': 'Not Connected',
-        'StartStop': 'Start',
-        'StartStopDisabled': false,
-        'ProfileName': 'None',
-        'ProfileSelectDisabled': true,
+    useEffect(() => {
+        if (readyState === ReadyState.OPEN) {
+            sendJsonMessage({});
+            console.debug('sendJasonMessage')
+        }
+    }, [sendJsonMessage, readyState]);
+
+
+    function doStartStop ():void {
+        console.debug('Doing stop start')
+        console.debug(state)
+        if (state === 'IDLE') {
+            // {"cmd":"RUN","profile":{"type":"profile","data":[[0,65],[600,200],[2088,250],[5688,250],[23135,1733],[28320,1888],[30900,1888]],"name":"cone-05-fast-bisque"}}
+            let segments: number[][] = []
+            usingProfile.data.forEach((timeTemp): void => {
+                segments.push([timeTemp.time / 1000, timeTemp.temperature])
+            })
+            let command = {'cmd': 'RUN', 'profile': {'type': 'progfile', 'data':segments, 'name': usingProfile.name}}
+            console.debug(command)
+            sendMessage(JSON.stringify(command))
+        }
+        else if (state === 'RUNNING') {
+            sendMessage(JSON.stringify({'cmd': 'STOP'}))
+        }
     }
-    return sprops
-}
 
-export function Controls(timesTemps: timeTempProps,
-                         kilnStatus: statusProps,
-                         usingProfile: usingProfileProps,
-                         profiles: profilesProps) {
+    const processMessages = (event: { data: string; }) => {
+        const response = JSON.parse(event.data); // This is not expected, could delete the function
+        console.debug("WS message in Controls: " + response)
+    }
 
     return (
-        <div
-            sx={{
-                display: 'flex',
-            }}>
-            {usingProfile.name}
-            <Button disabled={kilnStatus.StartStopDisabled} onClick={handleClickStartStop}
-                    sx={{width: '150px'}}>{kilnStatus.StartStop}</Button>
+    <Button onClick={doStartStop}
+    sx={{width: '150px'}}>{startStop(state)}</Button>
 
-            <Select onChange={handleProfileSelected}
-                    bg={'primary'}
-                    sx={{
-                        fontSize: ['10px', '30px', '30px'],
-                        fontWeight: 'bold',
-                        // width: '350px',
-                        marginLeft: '2px',
-                        marginRight: '2px',
-                        '&:disabled': {
-                            bg: 'muted',
-                            '&:hover': {
-                                bg: 'muted',
-                                border: 'none',
-                            },
-                            '&:active': {
-                                bg: 'muted'
-                            }
-                        },
-                        '&:hover': {
-                            bg: 'secondary',
-                            border: '3px solid',
-                            borderColor: 'primary'
-                        },
-                        '&:active': {
-                            bg: 'red',
-                        }
-                    }}>
-                {/*<option value="value" selected>Select Profile</option>*/}
-                {profiles.slice(0).map((category) => (
-                    <option>
-                        {category.name}
-                    </option>
-                ))
-                }
-            </Select>
+);
+}
 
-            <Grid gap={1} columns={[1, 1, 2]} margin={1}>
-                {ProfileChart(usingProfile.data, "whatever")}
-                {ProfileTable(usingProfile.data)}
-            </Grid>
-
-
-
-        </div>
-    )
+function startStop (state: string): string {
+    if (state === 'RUNNING') {
+        return 'Stop'
+    }
+    else {
+        return 'Start'
+    }
 }

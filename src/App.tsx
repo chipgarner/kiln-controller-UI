@@ -3,18 +3,20 @@ import React, {useEffect, useState} from 'react';
 import useWebSocket, {ReadyState} from 'react-use-websocket';
 import {ThemeUIProvider, Grid, useColorMode} from 'theme-ui'
 import {MainChart} from "./MainChart";
-import {initStatusProps, Controls} from "./Controls"
+import {Controls} from "./Controls"
+import {initStatusProps, Profiles} from "./Profiles"
 import {statusProps, usingProfileProps, profilesProps, timeTempProps} from './Props'
 import {theme} from "./TheTheme"
+import {Stats} from "./Stats";
 
 // Example:  const WS_URL = 'ws://127.0.0.1:8081/status';
 // This is needed if the server is running on a different machine than the browser.
 let server: string = window.location.href
 server = server.split(":")[1]
 server = server.split(":")[0]
-console.log(server)
 const WS_URL = 'ws:' + server + ':8081';
-console.log(WS_URL)
+console.debug(WS_URL)
+
 
 function App() {
     const [socketUrl, setSocketUrl] = useState(WS_URL + '/status');
@@ -23,16 +25,23 @@ function App() {
         sendJsonMessage, readyState
     } = useWebSocket(socketUrl, {
         onOpen: () => {
-            console.log('WebSocket connection established.');
+            console.log('WebSocket connection established: ' + socketUrl);
             if (socketUrl.indexOf('storage') > -1) {
+                console.debug('GET')
                 sendMessage('GET')
             }
         },
         share: true,
         filter: () => false,
-        retryOnError: true,
+        retryOnError: false,
         shouldReconnect: () => true,
-        onMessage: (event: WebSocketEventMap['message']) => processMessages(event)
+        onMessage: (event: WebSocketEventMap['message']) => processMessages(event),
+        onClose: (): void => {
+            console.debug('Socket closed.')
+            // if (socketUrl.indexOf('control') > -1) {
+            //     setSocketUrl(WS_URL + '/status')
+            // }
+        }
     });
 
     useEffect(() => {
@@ -50,13 +59,18 @@ function App() {
     }, [sendJsonMessage, readyState]);
 
     const [timesTemps, setTimesTemps] = useState<timeTempProps>([]);
-    const [profileData, setProfile] = useState<timeTempProps>([]);
     const [status, setStatus] = useState<statusProps>(initStatusProps)
-    // const [profileNames, setProfileNames] = useState<profileNamesProps>([]);
     const [profiles, setProfiles] = useState<profilesProps>([]);
 
     let initProfile: usingProfileProps = {name: 'None', data: []}
     const [usingProfile, setUsingProfile] = useState<usingProfileProps>(initProfile);
+
+    function updateUsingProfile(useProfile: usingProfileProps): void {
+        // console.debug(useProfile)
+        if (useProfile !== undefined && useProfile.name !== usingProfile.name) {
+            setUsingProfile(useProfile)
+        }
+    }
 
     const processMessages = (event: { data: string; }) => {
         try {
@@ -68,12 +82,10 @@ function App() {
                 if (response[0].name) {
                     let theProfiles: profilesProps = []
                     for (let i = 0; i < response.length; i++) {
-                        // setProfileNames(profileNames => [...profileNames, response[i]])
                         let profileName: string = response[i].name
                         let segments: timeTempProps = []
                         response[i].data.forEach((segment: number[]) => {
                             let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
-                            setProfile(profileData => [...profileData, thisSegment])
                             segments.push(thisSegment)
                         })
                         let thisProfile = {"name": profileName, "data": segments}
@@ -86,7 +98,22 @@ function App() {
                 }
             }
 
-            if (response.runtime) {
+            if (response.state) {
+                console.debug("Processing status")
+                console.debug(response.state)
+
+                // if (response.state !== newState) {doStartStop()}
+
+                let theStatus: statusProps = {
+                    'state': response.state,
+                    'target': response.target,
+                    'heat_rate': 0,
+                    'label': 'Not Connected',
+                    'StartStop': 'Start',
+                }
+
+                setStatus(status => theStatus)
+
                 let newtime: number = response.runtime * 1000 //moment needs milliseconds, show actual times in the charts
                 let newtemp: number = response.temperature
                 let tt = {"time": newtime, "temperature": newtemp}
@@ -94,25 +121,23 @@ function App() {
 
             } else if (response.log) {
                 console.debug("Processing backlog")
-                
+
                 for (let i = 0; i < response.log.length; i++) {
                     let newtime: number = response.log[i].runtime * 1000 //moment needs milliseconds, show actual times in the charts
                     let newtemp: number = response.log[i].temperature
                     let newtt = {"time": newtime, "temperature": newtemp}
                     setTimesTemps(timesTemps => [...timesTemps, newtt])
-                    console.debug(newtt)
                 }
 
                 let profileName: string = response.profile.name
                 let segments: timeTempProps = []
                 response.profile.data.forEach((segment: number[]) => {
                     let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
-                    setProfile(profileData => [...profileData, thisSegment])
                     segments.push(thisSegment)
                 })
                 let thisProfile = {"name": profileName, "data": segments}
                 setUsingProfile(usingProfile => thisProfile)
-                console.debug(usingProfile)
+                console.debug(thisProfile)
             }
 
         } catch (e) {
@@ -148,13 +173,29 @@ function App() {
     //       "out": 0.46212237891439073
     // }
 
+    function showProfiles(state: string) {
+        if (state === "RUNNING") {
+            return null
+        }
+        return Profiles(timesTemps, status, usingProfile, profiles, updateUsingProfile)
+    }
+
     return (
         <ThemeUIProvider theme={theme}>
-            {Controls(timesTemps, status, usingProfile, profiles)}
-            <Grid gap={1} columns={[1, 1, 2]} margin={1}>
-                {MainChart(timesTemps, usingProfile, "black")}
-            </Grid>
+            <div
+                sx={{
+                    display: 'flex',
+                }}>
+                {/*<Grid gap={1} columns={[1, 1, 2]} margin={1}>*/}
+                {Controls(status.state, usingProfile)}
+                {Stats(status)}
+            </div>
+            {showProfiles(status.state)}
+
+            {MainChart(timesTemps, usingProfile, "black")}
+            {/*</Grid>*/}
             <ColorModeButton/>
+
         </ThemeUIProvider>
     );
 }

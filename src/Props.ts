@@ -6,9 +6,9 @@ export type profileNamesProps = {
 export type statusProps = {
     'label': string,
     'StartStop': string,
-    'StartStopDisabled': boolean,
-    'ProfileName': string,
-    'ProfileSelectDisabled': boolean,
+    'state': string,
+    'target': number,
+    'heat_rate': number,
 }
 
 export type timeTempProps = {

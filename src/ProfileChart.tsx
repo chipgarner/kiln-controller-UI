@@ -25,7 +25,7 @@ export function ProfileChart(
                 <ComposedChart
                     data={profileData}>
                     <CartesianGrid strokeDasharray="4" fill={grid_fill_color}/>
-                    <XAxis dataKey="time_ms"
+                    <XAxis dataKey="time"
                            label={{ value: 'Time', position: 'bottom'}}
                            domain={["auto", "auto"]}
                            allowDataOverflow={false}

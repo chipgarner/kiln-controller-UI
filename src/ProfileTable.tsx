@@ -37,13 +37,13 @@ function showProfileData(profileData: timeTempProps) {
 }
 
 function segmentRowFromPoints(time_temp_1: profilePoints, time_temp_2: profilePoints) {
-    let row = [moment(time_temp_2["time"]).format('HH:mm:ss'),
+    let segRow = [moment(time_temp_2["time"]).format('HH:mm:ss'),
         time_temp_1["temperature"],
         ms_to_hr_min_sec(time_temp_2["time"] - time_temp_1["time"]),
             time_temp_2["temperature"],
-            (time_temp_2["temperature"] - time_temp_1["temperature"])/((time_temp_2["time"] - time_temp_1["time"])/3600)]
+            (time_temp_2["temperature"] - time_temp_1["temperature"])/((time_temp_2["time"] - time_temp_1["time"])/3600000)]
 
-    return row
+    return segRow
 }
 
 function fillRow(items: (string|number)[]) {
