@@ -18,6 +18,7 @@ export function MainChart(tempData: timeTempProps,
                  padding: '25px',
                  border: '5px solid',
                  borderColor: 'secondary',
+                 width: '80%'
              }}>
             <ResponsiveContainer width = "100%" aspect={2} >
                 <ComposedChart
@@ -27,10 +28,12 @@ export function MainChart(tempData: timeTempProps,
                     <CartesianGrid strokeDasharray="4" fill={grid_fill_color}/>
                     <XAxis dataKey="time"
                            label={{ value: 'Time', position: 'bottom'}}
-                           domain={[0, 36000000]}
+                           domain={[0, 'auto']}
                            // allowDataOverflow={false}
-                           tickFormatter = {(tick) => moment(tick).format('HH.mm')}
-                           // ticks = {[0, 1800000, 3600000, 7200000, 10800000, 14400000, 18000000, 21600000, 25200000]}
+                           // tickFormatter = {(zeroTime) => String(Math.round(zeroTime /3600000))}
+                           // ticks = {[0, 1, 2, 3, 4, 5, 6, 7]}
+                           // interval = {0}
+                           // minTickGap={3}
                            type="number"
                            includeHidden={true}/>
                     <YAxis yAxisId="left-axis"

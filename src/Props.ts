@@ -4,11 +4,27 @@ export type profileNamesProps = {
 }[];
 
 export type statusProps = {
-    'label': string,
-    'StartStop': string,
     'state': string,
+    'temperature': number,
     'target': number,
+    'pid': number
     'heat_rate': number,
+    'cost': number,
+    'time_to_go': number,
+}
+
+export function initStatusProps() {
+    let sprops: statusProps
+    sprops = {
+        'state': 'Off',
+        'temperature': -99,
+        'target': -99,
+        'pid': 0,
+        'heat_rate': 0,
+        'cost': 0,
+        'time_to_go': 0
+    }
+    return sprops
 }
 
 export type timeTempProps = {

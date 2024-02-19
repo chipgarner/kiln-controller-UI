@@ -1,11 +1,11 @@
 /** @jsxImportSource theme-ui */
-import React, {useEffect, useState} from 'react';
-import useWebSocket, {ReadyState} from 'react-use-websocket';
-import {ThemeUIProvider, Grid, useColorMode} from 'theme-ui'
+import React, {useState} from 'react';
+import useWebSocket from 'react-use-websocket';
+import {ThemeUIProvider, useColorMode} from 'theme-ui'
 import {MainChart} from "./MainChart";
 import {Controls} from "./Controls"
-import {initStatusProps, Profiles} from "./Profiles"
-import {statusProps, usingProfileProps, profilesProps, timeTempProps} from './Props'
+import {Profiles} from "./Profiles"
+import {statusProps, initStatusProps, usingProfileProps, timeTempProps} from './Props'
 import {theme} from "./TheTheme"
 import {Stats} from "./Stats";
 
@@ -14,22 +14,16 @@ import {Stats} from "./Stats";
 let server: string = window.location.href
 server = server.split(":")[1]
 server = server.split(":")[0]
+// server = '//192.168.1.91'
 const WS_URL = 'ws:' + server + ':8081';
 console.debug(WS_URL)
 
 
 function App() {
-    const [socketUrl, setSocketUrl] = useState(WS_URL + '/status');
-    const {
-        sendMessage,
-        sendJsonMessage, readyState
-    } = useWebSocket(socketUrl, {
+    const [socketUrl] = useState(WS_URL + '/status');
+    const {} = useWebSocket(socketUrl, {
         onOpen: () => {
             console.log('WebSocket connection established: ' + socketUrl);
-            if (socketUrl.indexOf('storage') > -1) {
-                console.debug('GET')
-                sendMessage('GET')
-            }
         },
         share: true,
         filter: () => false,
@@ -38,29 +32,11 @@ function App() {
         onMessage: (event: WebSocketEventMap['message']) => processMessages(event),
         onClose: (): void => {
             console.debug('Socket closed.')
-            // if (socketUrl.indexOf('control') > -1) {
-            //     setSocketUrl(WS_URL + '/status')
-            // }
         }
     });
 
-    useEffect(() => {
-        if (readyState === ReadyState.OPEN) {
-            sendMessage('');
-            console.debug('sendMessage')
-        }
-    }, [sendMessage, readyState]);
-
-    useEffect(() => {
-        if (readyState === ReadyState.OPEN) {
-            sendJsonMessage({});
-            console.debug('sendJasonMessage')
-        }
-    }, [sendJsonMessage, readyState]);
-
     const [timesTemps, setTimesTemps] = useState<timeTempProps>([]);
-    const [status, setStatus] = useState<statusProps>(initStatusProps)
-    const [profiles, setProfiles] = useState<profilesProps>([]);
+    const [status, setStatus] = useState<statusProps>(initStatusProps);
 
     let initProfile: usingProfileProps = {name: 'None', data: []}
     const [usingProfile, setUsingProfile] = useState<usingProfileProps>(initProfile);
@@ -77,53 +53,41 @@ function App() {
             const response = JSON.parse(event.data);
             console.debug(response)
 
-            if (profiles.length < 1) { // No list of profile names, switch websockets to get them.
-                setSocketUrl(WS_URL + '/storage')
-                if (response[0].name) {
-                    let theProfiles: profilesProps = []
-                    for (let i = 0; i < response.length; i++) {
-                        let profileName: string = response[i].name
-                        let segments: timeTempProps = []
-                        response[i].data.forEach((segment: number[]) => {
-                            let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
-                            segments.push(thisSegment)
-                        })
-                        let thisProfile = {"name": profileName, "data": segments}
-                        theProfiles.push(thisProfile)
-                    }
-                    setProfiles(profiles => theProfiles)
-                    setUsingProfile(usingProfile => theProfiles[0])
-                    console.debug(theProfiles)
-                    setSocketUrl(WS_URL + '/status')
-                }
-            }
-
             if (response.state) {
                 console.debug("Processing status")
                 console.debug(response.state)
 
-                // if (response.state !== newState) {doStartStop()}
+                let heat_rate = response.heat_rate
+                if (heat_rate > 9999) {
+                    heat_rate = 9999
+                } else if (heat_rate < -9999) {
+                    heat_rate = -9999
+                }
 
                 let theStatus: statusProps = {
                     'state': response.state,
+                    'temperature': response.temperature,
                     'target': response.target,
-                    'heat_rate': 0,
-                    'label': 'Not Connected',
-                    'StartStop': 'Start',
+                    'pid': response.pidstats.pid, // Percent power setting
+                    'heat_rate': heat_rate,
+                    'cost': response.cost,
+                    'time_to_go': response.totaltime - response.runtime,
                 }
 
                 setStatus(status => theStatus)
 
-                let newtime: number = response.runtime * 1000 //moment needs milliseconds, show actual times in the charts
-                let newtemp: number = response.temperature
-                let tt = {"time": newtime, "temperature": newtemp}
-                setTimesTemps(timesTemps => [...timesTemps, tt])
+                if (response.state === 'RUNNING') {
+                    let newtime: number = response.runtime / 3600 //moment needs milliseconds, show actual times in the charts
+                    let newtemp: number = response.temperature
+                    let tt = {"time": newtime, "temperature": newtemp}
+                    setTimesTemps(timesTemps => [...timesTemps, tt])
+                }
 
             } else if (response.log) {
                 console.debug("Processing backlog")
 
                 for (let i = 0; i < response.log.length; i++) {
-                    let newtime: number = response.log[i].runtime * 1000 //moment needs milliseconds, show actual times in the charts
+                    let newtime: number = response.log[i].runtime / 3600 //moment needs milliseconds, show actual times in the charts
                     let newtemp: number = response.log[i].temperature
                     let newtt = {"time": newtime, "temperature": newtemp}
                     setTimesTemps(timesTemps => [...timesTemps, newtt])
@@ -132,7 +96,7 @@ function App() {
                 let profileName: string = response.profile.name
                 let segments: timeTempProps = []
                 response.profile.data.forEach((segment: number[]) => {
-                    let thisSegment = {"time": segment[0] * 1000, "temperature": segment[1]}
+                    let thisSegment = {"time": segment[0] / 3600, "temperature": segment[1]}
                     segments.push(thisSegment)
                 })
                 let thisProfile = {"name": profileName, "data": segments}
@@ -173,13 +137,6 @@ function App() {
     //       "out": 0.46212237891439073
     // }
 
-    function showProfiles(state: string) {
-        if (state === "RUNNING") {
-            return null
-        }
-        return Profiles(timesTemps, status, usingProfile, profiles, updateUsingProfile)
-    }
-
     return (
         <ThemeUIProvider theme={theme}>
             <div
@@ -187,11 +144,12 @@ function App() {
                     display: 'flex',
                 }}>
                 {/*<Grid gap={1} columns={[1, 1, 2]} margin={1}>*/}
+                {Profiles(usingProfile, status.state, updateUsingProfile)}
+
+
                 {Controls(status.state, usingProfile)}
                 {Stats(status)}
             </div>
-            {showProfiles(status.state)}
-
             {MainChart(timesTemps, usingProfile, "black")}
             {/*</Grid>*/}
             <ColorModeButton/>

@@ -13,7 +13,7 @@ function showProfileData(profileData: timeTempProps) {
     if (profileData.length > 2) {
         let rows = []
         rows.push(
-            <tr>{fillRow([moment(profileData[0]["time"]).format('HH:mm:ss'),
+            <tr>{fillRow([moment(profileData[0]["time"] * 3600000).format('HH:mm:ss'),
                 'Ambient',
                 'Unknown',
                 profileData[1]["temperature"],
@@ -37,11 +37,12 @@ function showProfileData(profileData: timeTempProps) {
 }
 
 function segmentRowFromPoints(time_temp_1: profilePoints, time_temp_2: profilePoints) {
-    let segRow = [moment(time_temp_2["time"]).format('HH:mm:ss'),
+    let segRow = [moment(time_temp_2["time"] * 3600000).format('HH:mm:ss'),
         time_temp_1["temperature"],
-        ms_to_hr_min_sec(time_temp_2["time"] - time_temp_1["time"]),
+        ms_to_hr_min_sec((time_temp_2["time"] - time_temp_1["time"]) * 3600000),
             time_temp_2["temperature"],
-            (time_temp_2["temperature"] - time_temp_1["temperature"])/((time_temp_2["time"] - time_temp_1["time"])/3600000)]
+            Math.round((time_temp_2["temperature"] - time_temp_1["temperature"])/
+                ((time_temp_2["time"] - time_temp_1["time"])))]
 
     return segRow
 }
@@ -93,7 +94,7 @@ export function ProfileTable(profileData: timeTempProps) {
 }
 
 function ms_to_hr_min_sec(ms: number) {
-    let totalSeconds = ms / 1000;
+    let totalSeconds = Math.round(ms / 1000);
     let hours = Math.floor(totalSeconds / 3600);
     totalSeconds %= 3600;
     let minutes = Math.floor(totalSeconds / 60);

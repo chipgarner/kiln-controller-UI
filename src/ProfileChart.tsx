@@ -8,7 +8,6 @@ import {CartesianGrid,
 import { Box  } from 'theme-ui'
 import React from "react";
 import {timeTempProps} from './Props'
-import moment from "moment/moment";
 
 export function ProfileChart(
                           profileData: timeTempProps,
@@ -27,9 +26,8 @@ export function ProfileChart(
                     <CartesianGrid strokeDasharray="4" fill={grid_fill_color}/>
                     <XAxis dataKey="time"
                            label={{ value: 'Time', position: 'bottom'}}
-                           domain={["auto", "auto"]}
+                           domain={[0, "auto"]}
                            allowDataOverflow={false}
-                           tickFormatter = {(unixTime) => moment(unixTime).format('HH')}
                            type="number"
                            includeHidden={true}/>
                     <YAxis yAxisId="left-axis"
