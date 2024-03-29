@@ -88,48 +88,48 @@ export function Profiles(usingProfile: usingProfileProps, state: string, updateU
         return (
             <div>
                 <div sx={{display: 'flex',}}>
-                {labelledeNumber('Using Profile', usingProfile.name)}
-            <Select onChange={handleProfileSelected}
-                    bg={'primary'}
-                    sx={{
-                        fontSize: ['10px', '30px', '30px'],
-                        fontWeight: 'bold',
-                        // width: '350px',
-                        marginLeft: '2px',
-                        marginRight: '2px',
-                        '&:disabled': {
-                            bg: 'muted',
-                            '&:hover': {
-                                bg: 'muted',
-                                border: 'none',
-                            },
-                            '&:active': {
-                                bg: 'muted'
-                            }
-                        },
-                        '&:hover': {
-                            bg: 'secondary',
-                            border: '3px solid',
-                            borderColor: 'primary'
-                        },
-                        '&:active': {
-                            bg: 'red',
+                    {labelledeNumber('Using Profile', usingProfile.name)}
+                    <Select onChange={handleProfileSelected}
+                            bg={'primary'}
+                            sx={{
+                                fontSize: ['10px', '30px', '30px'],
+                                fontWeight: 'bold',
+                                // width: '350px',
+                                marginLeft: '2px',
+                                marginRight: '2px',
+                                '&:disabled': {
+                                    bg: 'muted',
+                                    '&:hover': {
+                                        bg: 'muted',
+                                        border: 'none',
+                                    },
+                                    '&:active': {
+                                        bg: 'muted'
+                                    }
+                                },
+                                '&:hover': {
+                                    bg: 'secondary',
+                                    border: '3px solid',
+                                    borderColor: 'primary'
+                                },
+                                '&:active': {
+                                    bg: 'red',
+                                }
+                            }}>
+                        <option value="value" selected>Select Profile</option>
+                        {profiles.slice(0).map((category) => (
+                            <option>
+                                {category.name}
+                            </option>
+                        ))
                         }
-                    }}>
-                <option value="value" selected>Select Profile</option>
-                {profiles.slice(0).map((category) => (
-                    <option>
-                        {category.name}
-                    </option>
-                ))
-                }
-            </Select>
+                    </Select>
                 </div>
 
-        <Grid gap={1} columns={[1, 1, 2]} margin={1}>
-            {ProfileChart(usingProfile.data, "whatever")}
-            {ProfileTable(usingProfile.data)}
-        </Grid>
+                <Grid gap={1} columns={[1, 1, 2]} margin={1}>
+                    {ProfileChart(usingProfile.data, "whatever")}
+                    {ProfileTable(usingProfile.data)}
+                </Grid>
             </div>
         )
     }

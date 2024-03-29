@@ -143,19 +143,22 @@ function App() {
                 sx={{
                     display: 'flex',
                 }}>
-                {/*<Grid gap={1} columns={[1, 1, 2]} margin={1}>*/}
                 {Profiles(usingProfile, status.state, updateUsingProfile)}
+            </div>
 
-
+            <div
+                sx={{
+                    display: 'flex',
+                }}>
                 {Controls(status.state, usingProfile)}
                 {Stats(status)}
             </div>
+
             {MainChart(timesTemps, usingProfile, "black")}
-            {/*</Grid>*/}
             <ColorModeButton/>
 
         </ThemeUIProvider>
-    );
+);
 }
 
 function ColorModeButton() {
